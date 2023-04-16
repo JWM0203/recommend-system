@@ -1,0 +1,17 @@
+<!--我的评分-->
+{% extends "base_show.html" %}
+{% block th_name %}
+    <th>item</th>
+    <th>score</th>
+    <th>time</th>
+    <th>adapt</th>
+{% endblock %}
+{% block modal %}
+    <a class="btn btn-primary btn-block" href="{% url 'delete_rate' i.id %}">确认</a>
+{% endblock %}
+{% block th_value %}
+    <td><a href="{% url 'music' i.movie.id %}"> {{ i.movie.name }}</a></td>
+    <td>{{ i.mark }}</td>
+    <td>{{ i.create_time }}</td>
+    <td><a class="btn btn-danger" data-toggle="modal" data-target="#confirm-modal">删除</a></td>
+{% endblock %}

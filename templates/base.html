@@ -1,0 +1,195 @@
+{#{% load grav_tag %}#}
+<!--主页面-->
+<!DOCTYPE html><!--该标签告知浏览器文档所使用的 HTML 规范。-->
+{% load static %}
+<html lang="en"><!--语言为中文网站-->
+<head>
+    <meta charset="utf-8"><!--规定 HTML 文档的字符编码-->
+    <title>Recommendation system</title><!--网站标题-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><!--width:可视区域的宽度，intial-scale:页面首次被显示是可视区域的缩放级别，取值1.0则页面按实际尺寸显示，无任何缩放,maximum-scale用户可将页面放大的程序，1.0将禁止用户放大到实际尺寸之上。-->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}"><!--调用一个外部的CSS样式文件。-->
+    <link rel="stylesheet" href="{% static 'css/zerogrid.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"
+          crossorigin="anonymous">
+</head>
+<body>
+<div class="wrap-body"><!--class:分区域-->
+    <header>
+        <div class="wrap-header zerogrid"><!--内部分块 标题部分-->
+            <div class="row"><!--“行”类主要用于在其中保存列。 Bootstrap 将每一行划分为 12 个虚拟列的网格-->
+                <div class="col-1-2"><!--标题占当前行的一半-->
+                    <div class="wrap-col">
+                        <div class="logo" style="font-size: 33px;padding: 16px 0;font-family: sans-serif; "><!--字体大小 上内边距和下内边距是 16px
+右内边距和左内边距是 0px 字体样式-->
+                            <a href="/"> Recommendation system</a><!--超链接当前页面-->
+                        </div>
+                    </div>
+                </div>
+                <div class="col-1-2"><!--搜索占当前行另一半-->
+                    <div class="wrap-col f-right">
+                        <form method="post" action="{% url 'search' %}" id="search"><!--这是一个form表单，但你提交后，会跳转到{% url 'search' %}，采用的方式是post，-->
+                            {% csrf_token %}<!--一种数据提交的验证机制-->
+                            <input name="search" type="text" size="40" placeholder="搜索..."/><!--placeholder 属性提供可描述输入字段预期值的提示信息-->
+                            <input type="submit" value="提交"><!--submit 类型的 <input> 元素会渲染为按钮。当 click 事件发生时（用户点击按钮是一个典型的点击事件）， 用户代理 尝试提交表单到服务器-->
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="row"><!--分出另一行 菜单-->
+                <div id="menu">
+                    <nav>
+                        <div class="wrap-nav">
+                            <ul>
+                                <li class="active"><a href= {% url 'index' %}>Home</a></li><!--点击跳转-->
+                                <li class="active"><a href= {% url 'all_tags' %}>labels</a></li>
+                                {% if request.session.login_in == True %}<!--如果已经登录-->
+                                    <li><a href="{% url 'personal' %}">{{ request.session.name }}</a></li>
+                                    <li><a href="{% url 'logout' %}">exit</a></li>
+                                {% else %}<!--如果未登录-->
+                                    {{ request.session.login_in }}
+                                    <li class="active"><a href= {% url 'login' %}>login</a></li><!----跳转到对应界面 看对应文件-->
+                                    <li class="active"><a href= {% url 'register' %}>register</a></li>
+                                     <li class="active"><a href= http://127.0.0.1:8000/admin>Backstage</a></li><!--跳转到对应网址-->
+                                    {#                                    <li><a href="{% url 'clear_cache' %}">Clean up the cache</a></li>#}
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!--////////////////////////////////////Container-->
+    <section id="container">
+        <div class="wrap-container zerogrid"><!--分块-->
+            <div id="main-content" class="col-2-3"><!--主页左半部分-->
+                {% block main_content %}<!--转到items.html-->
+                {% endblock %}
+            </div>
+            <div id="sidebar" class="col-1-3"><!--主页右半部分-->
+                <div class="wrap-sidebar">
+                    <!---- Start Widget ---->
+                    <div class="widget wid-new-updates">
+                        <div class="wid-header">
+                            <h5>hot video</h5>
+                        </div>
+                        <div class="wid-content">
+                            <ul id="latest-music">
+                                {% for movie in new_list %}
+                                    <li><a href="{% url 'music' movie.id %}">{{ movie.name }}</a><span><img src="/static/images/hot.png"/></span></li>
+                                {% endfor %}<!--结束循环-->
+                            </ul>
+                        </div>
+                    </div>
+                    <!---- Start Widget ---->
+                    <div class="widget wid-last-updates"><!--基于用户推荐的歌曲模块-->
+                        <div class="wid-header">
+                            <div class="row"><!--分出一行 显示基于用户推荐歌曲-->
+                                <div class="col-md-9">
+                                    <h5> Based on user-recommended videos</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <a style="color: white" onclick="get_user_recommend()" href="#" class="btn btn-warning">换一批</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="wid-content" id="user-recommend"><!--显示基于用户的推荐音乐-->
+                            {% for movie in user_recommend_list %}
+                                <div class="post">
+                                    <a href="{% url 'music' movie.id %}"><img src="{{ MEDIA_URL }}{{ movie.image_link }}"/></a><!--显示音乐图片-->
+                                    <div class="wrapper">
+                                        <a href="{% url 'music' movie.id %}"><h6>{{ movie.name }}</h6></a><!--名称-->
+                                        <p>{{ movie.years }}</p>
+                                        <a href="{% url 'music' movie.id %}">评分{{ movie.rate }}</a><!--评分-->
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!--////////////////////////////////////Footer-->
+    <footer><!--网页底部栏-->
+        <div class="bottom-footer">
+            <div class="wrap-bottom ">
+                <div class="copyright">
+{#                    <p>©2020 <a href="http://www.colaplusice.com/" target="_blank">Colaplusice</a>电影推荐系统</p>#}
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+</div>
+<script src="{% static 'js/jquery-2.1.1.min.js' %}"></script>
+<script src="{% static "/js/bootstrap.min.js" %}"></script>
+{#<script src="{% static 'js/css3-mediaqueries.js' %}"></script>#}
+{% block bottom-js %}
+{% endblock %}
+<script>
+    <!--ajax 一个前后台配合的技术，它可以让javascript发送http请求，与后台通信，获取数据和信息-->
+    <!--获取基于用户推荐的音乐-->
+    function get_user_recommend() {
+        $.ajax({
+            url: '/user_recommend/',
+            type: 'GET',
+            success: function (result) {
+                var html = "";
+                var array_length = result.length;
+                for (var i = 0; i < array_length; i++) {
+                    html += `<div class="post">\n` +
+                        `<a href="/music/${result[i].id}"><img src="${result[i].image_link}"/></a>` +
+                        `<div class="wrapper"><a href="/music/${result[i].id}"><h6>${result[i].name}</h6></a>`
+                        + `<p> ${result[i].years}</p>`
+                        + `<a href="/music/${result[i].id}">评分${result[i].d_rate}</a>\n</div>`
+                    ;
+                }
+                $('#user-recommend').html(html);
+                {#console.log(html);#}
+            },
+            fail: function (xhr, textStatus, errorThrown) {
+                alert('request failed');
+            },
+            error: function (jqXHR, exception) {
+                console.log(jqXHR.status);
+                console.log(exception);
+            }
+        });
+    }
+
+    get_user_recommend();
+
+    <!--获取热门歌曲-->
+    function get_latest_movie() {
+        $.ajax({
+            url: '/latest_movie/',
+            type: 'GET',
+            success: function (result) {
+                var html = "";
+                var array_length = result.length;
+                for (var i = 0; i < array_length; i++) {
+                    html += `<li><a href="/music/${result[i].id}">${result[i].name}</a><span><img src="/static/images/hot.png"/></span></li>`;
+                }
+                $('#latest-music').html(html);
+            },
+            fail: function (xhr, textStatus, errorThrown) {
+                alert('request failed');
+            },
+            error: function (jqXHR, exception) {
+                console.log(jqXHR.status);
+                console.log(exception);
+            }
+        });
+    }
+
+    get_latest_movie();
+
+</script>
+
+</body>
+</html>
